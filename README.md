@@ -1,4 +1,4 @@
-# impulse49-61-bitwig-controller
+# Novation Impulse 49/61 controller script for Bitwig
 A Bitwig controller script for the Novation Impulse 49/61.
 
 Bitwig's Impulse25 controller script is buggy and didn't work for my Impulse61. So I decided to make a controller script that will.
