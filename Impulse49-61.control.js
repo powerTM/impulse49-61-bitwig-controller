@@ -58,6 +58,7 @@ var	notePressed    = 144,
 
 function init()
 {
+	println("experimental");
 	bitwigVersion = host.getHostVersion();
 	/* CC midi actions listener: */
 	host.getMidiInPort(0).setMidiCallback(onMidi);
