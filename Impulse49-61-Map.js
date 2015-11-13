@@ -5,11 +5,7 @@ CC.prototype.command = function()
 	switch(this.key) {
 		case ccRewind.key:
 			if ( !midiBtnKnobsOn ) {
-				if ( fineTuning ) {
-					doFineTuning(-.1);
-				} else {
-					transport.rewind();
-				}
+				transport.rewind();
 				break;
 			} else {
 				host.scheduleTask(notifyImpulse, ["RE/FF disabled. Switch back to 'Plugin' to enable."], 500);
@@ -17,11 +13,7 @@ CC.prototype.command = function()
 
 		case ccFastForward.key:
 			if ( !midiBtnKnobsOn ) {
-				if ( fineTuning ) {
-					doFineTuning(.1);
-				} else {
-					transport.fastForward();
-				}
+				transport.fastForward();
 				break;
 			}
 
@@ -43,86 +35,100 @@ CC.prototype.command = function()
 		case pluginBtn.key:
 			midiBtnKnobsOn = false;
 			break;
+		case shift.key:
+			break;
+
 	}
-	
+
 	// General mode commands:
 	if ( impulseControlMode === "general" ) {
-		switch(this.key) {
-			case mute1.key:
-				bitwig.toggleInspector();
-				break;
-			case mute2.key:
-				switch(panelSwap) {
-					//bitwigActions[197].invoke(); (Next sub-panel command)
-					// Nothing is shown
-					case 0:
-						bitwig.toggleNoteEditor();
-						panelSwap = 1;
-						break;
-					// Note editor panel is displayed:
-					case 1: 
-						bitwig.toggleAutomationEditor();
-						panelSwap = 2;
-						break;
-					// Automation editor panel is displayed:
-					case 2: 
-						bitwig.toggleDevices();
-						panelSwap = 3;
-						break;
-					// Device panel is displayed:
-					case 3:
-						bitwig.toggleMixer();
-						panelSwap = 4;
-						break;
-					// Mixer panel is displayed:
-					case 4:
-						bitwig.toggleMixer();
-						panelSwap = 0;
-						break;
-				}
-				break;
-			case mute3.key:
-				bitwig.toggleBrowserVisibility();
-				break;
-			case mute4.key:
-				bitwig.createAudioTrack(cursorTrackPosition+1);
-				//cursorTrack.selectNext();
-				//bitwigActions[32].invoke();
-				break;
-			case mute5.key:
-				bitwig.createEffectTrack(cursorTrackPosition+1);
-				cursorTrack.selectNext();
-				break;
-			case mute6.key:
-				bitwig.createInstrumentTrack(cursorTrackPosition+1);
-				cursorTrack.selectNext();
-				break;
-			case mute7.key:
-				cursorTrack.selectPrevious();
-				break;
-			case mute8.key:
-				cursorTrack.selectNext();
-				break;
-			case muteMaster.key:
-				bitwig.setPanelLayout(nextPanelToDisplay);
-				break;
+		if ( isShift ) {
+
+			switch(this.key) {
+				case mute1M.key:
+					bitwig.toggleInspector();
+					break;
+				case mute2M.key:
+					switch(panelSwap) {
+						//bitwigActions[197].invoke(); (Next sub-panel command)
+						// Nothing is shown
+						case 0:
+							bitwig.toggleNoteEditor();
+							panelSwap = 1;
+							break;
+						// Note editor panel is displayed:
+						case 1: 
+							bitwig.toggleAutomationEditor();
+							panelSwap = 2;
+							break;
+						// Automation editor panel is displayed:
+						case 2: 
+							bitwig.toggleDevices();
+							panelSwap = 3;
+							break;
+						// Device panel is displayed:
+						case 3:
+							bitwig.toggleMixer();
+							panelSwap = 4;
+							break;
+						// Mixer panel is displayed:
+						case 4:
+							bitwig.toggleMixer();
+							panelSwap = 0;
+							break;
+					}
+					
+					break;
+				case mute3M.key:
+					bitwig.toggleBrowserVisibility();
+					break;
+				case mute4M.key:
+					bitwig.createAudioTrack(cursorTrackPosition+1);
+					cursorTrack.selectNext();
+					//bitwigActions[32].invoke();
+					break;
+				case mute5M.key:
+					if ( this.midiChan === firstChannel ) { // Allow if key is not shift2:
+						bitwig.createEffectTrack(cursorTrackPosition+1);
+						cursorTrack.selectNext();
+					}
+					break;
+				case mute6M.key:
+					bitwig.createInstrumentTrack(cursorTrackPosition+1);
+					cursorTrack.selectNext();
+					break;
+				case muteMasterM.key:
+					bitwig.setPanelLayout(nextPanelToDisplay);
+					break;
+				case nextTrack.key:
+					cursorTrack.selectNext();
+					break;
+				case prevTrack.key:
+					cursorTrack.selectPrevious();
+					break;
+			}
+		} 
+
+		else {
+			switch(this.key) {
+				case mute1M.key:
+				case mute2M.key:
+				case mute3M.key:
+				case mute4M.key:
+				case mute5M.key:
+				case mute6M.key:
+				case mute7M.key:
+				case mute8M.key:
+					changeChannelState(channels[this.slot].slot);
+					break;
+			}
+			
 		}
 	}
 
 	// Mixing mode commands:
 	else if ( impulseControlMode === "mixing" ) {
-		switch(this.key) {
-			case mute1.key:
-			case mute2.key:
-			case mute3.key:
-			case mute4.key:
-			case mute5.key:
-			case mute6.key:
-			case mute7.key:
-			case mute8.key:
-				changeChannelState(channels[this.slot].slot);
-				break;
-		}
+
 	}
 	// Device control mode commands:
 	else if ( impulseControlMode === "device" ) {
@@ -137,9 +143,6 @@ CC.prototype.command = function()
 				device.nextParameterPage();
 				break;
 			case mute8.key:
-				fineTuning = fineTuning ? false : true; // Toggle true/false
-				fineTuningStatus = fineTuning ? "Fine Tuning Enabled" : "Fine Tuning Disabled";
-				host.scheduleTask(notifyImpulse, [fineTuningStatus], 500);
 				break;
 
 		}

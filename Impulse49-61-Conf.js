@@ -4,7 +4,7 @@ Mappings:
 
 /*
 * 
-* Button ( fader, knobs, etc. ) Settings:
+* Button ( fader, knobs, etc. ) settings:
 * 
 */
 
@@ -80,9 +80,16 @@ var Channel = function(slot, volume, state)
 var midiBtnKnobs  	= new CC(8, "midiBtnKnobs", 177), // "MIDI" / "Page down" button next to knobs 
 	pluginMixerMidi = new CC(9, "pluginMixerMidi", 177), // "< Mixer" mode - sent when "Plugin" + "MIDI" are pressed together
 	pluginBtn 		= new CC(10, "pluginBtn", 177), // "Plugin" / "Page Up" button next to knobs
-	pageUpBtn		= new CC(11, "pageUpBtn", 177), // This CC is sent as a result of holding shift + "Plugin" button
-	pageDownBtn 	= new CC(12, "pageDownBtn", 177), // This CC is sent as a result of holding shift + "MIDI" button
-
+	pageUpBtn		= new CC(11, "pageUpBtn", 177), // The result of holding shift + "Plugin" button
+	pageDownBtn 	= new CC(12, "pageDownBtn", 177), // The result of holding shift + "MIDI" button
+	midiBtnFaders  	= new CC(33, "midiBtnFaders"), // "MIDI" / "Bank Down" button next to faders:
+	//Clashes with the mutu/solo button:
+	//mixerBtn 		= new CC(34, "mixerBtn", ), // "Mixer" / "Bank Up" button next to faders 
+	muteSoloBtn		= new CC(34, "mutuSoloBtn", 176), // Switches between mute / solo - when "Mixer" button is on
+	nextTrack 		= new CC(37, "nextTrack", 176), // The result holding shift + ">" (Under the "Transpose" section)
+	prevTrack 		= new CC(38, "prevTrack", 176), // The result holding shift + "<" (Under the "Transpose" section)
+	shift 			= new CC(39, "shift", 176),
+	shift2 			= new CC(13, "shift2", 177),
 	/* Knobs: */
 	knob1 = new Knob(21, "knob1", 176, 0),
 	knob2 = new Knob(22, "knob2", 176, 1),	
@@ -111,10 +118,6 @@ var midiBtnKnobs  	= new CC(8, "midiBtnKnobs", 177), // "MIDI" / "Page down" but
 	ccLoop 		  	= new CC(31, "loop"),
 	ccRecord 	  	= new CC(32, "record"),
 
-
-	midiBtnFaders  	= new CC(33, "midiBtnFaders"), // "MIDI" / "Bank Down" button next to faders:
-	mixerBtn 		= new CC(34, "mixerBtn"), // "Mixer" / "Bank Up" button next to faders 
-
 	/* Pads: */
 	pad1 = new CC(60, "pad1"),
 	pad2 = new CC(61, "pad2"),
@@ -137,36 +140,38 @@ var midiBtnKnobs  	= new CC(8, "midiBtnKnobs", 177), // "MIDI" / "Page down" but
 	fader9 = new Fader(49, "masterFdr", 176),
 
 	/* Faders - mixer mode: */
-	fader1 = new Fader(0, "fader1", 176, 0),
-	fader2 = new Fader(1, "fader2", 176, 1),
-	fader2 = new Fader(2, "fader3", 176, 2),
-	fader2 = new Fader(3, "fader4", 176, 3),
-	fader2 = new Fader(4, "fader5", 176, 4),
-	fader2 = new Fader(5, "fader6", 176, 5),
-	fader2 = new Fader(6, "fader7", 176, 6),
-	fader8 = new Fader(7, "fader8", 176, 7),
-	fader9 = new Fader(8, "masterFdr", 176),
+	fader1M = new Fader(0, "fader1M", 176, 0),
+	fader2M = new Fader(1, "fader2M", 176, 1),
+	fader3M = new Fader(2, "fader3M", 176, 2),
+	fader4M = new Fader(3, "fader4M", 176, 3),
+	fader5M = new Fader(4, "fader5M", 176, 4),
+	fader6M = new Fader(5, "fader6M", 176, 5),
+	fader7M = new Fader(6, "fader7M", 176, 6),
+	fader8M = new Fader(7, "fader8M", 176, 7),
+	fader9M = new Fader(8, "masterFdrM", 176),
 
 	/* Mute / solo buttons: */
-	mute1 = new Fader(51, "mute1", 0),
-	mute2 = new Fader(52, "mute2", 1),
-	mute3 = new Fader(53, "mute3", 2),
-	mute4 = new Fader(54, "mute4", 3),
-	mute5 = new Fader(55, "mute5", 4),
-	mute6 = new Fader(56, "mute6", 5),
-	mute7 = new Fader(57, "mute7", 6),
-	mute8 = new Fader(58, "mute8", 7),
-	muteMaster = new Fader(59, "muteMaster", 8),
+	mute1 = new Fader(51, "mute1", 176, 0),
+	mute2 = new Fader(52, "mute2", 176, 1),
+	mute3 = new Fader(53, "mute3", 176, 2),
+	mute4 = new Fader(54, "mute4", 176, 3),
+	mute5 = new Fader(55, "mute5", 176, 4),
+	mute6 = new Fader(56, "mute6", 176, 5),
+	mute7 = new Fader(57, "mute7", 176, 6),
+	mute8 = new Fader(58, "mute8", 176, 7),
+	muteMaster = new Fader(59, "muteMaster", 176, 8),
 
-	/* Knobs in "Plugin" mode: */
-	knobPlg1 = new CC(0, "knobPlg1", 177),
-	knobPlg2 = new CC(1, "knobPlg2", 177),	
-	knobPlg3 = new CC(2, "knobPlg3", 177),
-	knobPlg4 = new CC(3, "knobPlg4", 177),
-	knobPlg5 = new CC(4, "knobPlg5", 177),
-	knobPlg6 = new CC(5, "knobPlg6", 177),	
-	knobPlg7 = new CC(6, "knobPlg7", 177),
-	knobPlg8 = new CC(7, "knobPlg8", 177),
+	/* Mute / solo buttons - mixer mode: */
+	mute1M = new Fader(9, "mute1M", 176, 0),
+	mute2M = new Fader(10, "mute2M", 176, 1),
+	mute3M = new Fader(11, "mute3M", 176, 2),
+	mute4M = new Fader(12, "mute4M", 176, 3),
+	mute5M = new Fader(13, "mute5M", 176, 4),
+	mute6M = new Fader(14, "mute6M", 176, 5),
+	mute7M = new Fader(15, "mute7M", 176, 6),
+	mute8M = new Fader(16, "mute8M", 176, 7),
+	muteMasterM = new Fader(17, "muteMasterM", 176, 8),
+
 
 	/* Channel mappings: */
 	channel1 = new Channel(0),

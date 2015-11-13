@@ -33,11 +33,12 @@ var SYSEX_HEADER 	   		= "F0 00 20 29 67",
 	nextPanelToDisplay 		= "MIX",
 	mixerFadersForgiveness 	= 3.0,
 	knobsForgiveness		= 10.0,
-	fineTuning 				= false, // Allows for a finer parameter adjustment when true
 	impulseDebugging 		= false,
 	panelSwap 				= 0,
 	cursorTrackPosition 	= 0,
-	lastAffectedParam 		= 0; // Used to tell Bitwig which parameter to reset when requested	
+	lastAffectedParam 		= 0, // Used to tell Bitwig which parameter to reset when requested	
+	isShift					= false,
+	isChannelsMuteMode		= true;
 
 load('Impulse49-61-Conf.js');
 load('Impulse49-61-Map.js');
@@ -47,8 +48,8 @@ var	notePressed    = 144,
 	noteReleased   = 128,
 	ccOn 	   	   = 127,
 	ccOff 	   	   = 0,
-	transportOn    = 1,
-	transportOff   = 0,
+	buttonOn       = 1,
+	buttonOff      = 0,
 	currentCC      = "",
 	disableNextCc  = 0,
 	midiBtnKnobsOn = false,
@@ -257,38 +258,36 @@ function onMidi(status, action, value)
 
 
 		// Check if CC is a mixer fader:
-		if ( action >= fader1.key && action <= fader8.key ) {
-			setVolume(ccList.channel1[action].slot, value);
+		if ( action >= fader1M.key && action <= fader8M.key ) {
+			if ( status !== secondChannel ) {
+				setVolume(ccList.channel1[action].slot, value);
+			}
+			
 		} 
 
 		// Check if CC is a knob:
-		if ( action >= knob1.key && action <= knob8.key && midiBtnKnobsOn ) {
-			// We are forced to assign a specific action for knobs 7/8 since
-			// Impulse assigns them the same CC as RW/FF on the transport:
-			switch(action) {
-				case knob7.key:
-					knobCC(6, value);
-					break;
-				case knob8.key:
-					knobCC(7, value);
-					break;
-				default:
-					knobCC(ccList.channel1[action].slot, value);	
-			}
-			return;
+		if ( action >= knob1P.key && action <= knob8P.key && !midiBtnKnobsOn ) {
 
-		} else if ( action >= knob1P.key && action <= knob8P.key && !midiBtnKnobsOn ) {
-			if ( status === secondChannel ) {
-				knobCC(ccList.channel2[action].slot, value);
-			}
-			
+			knobCC(ccList.channel2[action].slot, value);
+
 		}
 
 		// The following executes on button midi press (127):
-		if ( value === ccOn || value === transportOn ) 
+		if ( value === ccOn || value === buttonOn ) 
 		{
+			// Check if Shift is pressed:
+			if ( action === shift.key ) {
+				isShift = true;
+				return;
+			}
+			else if ( action === muteSoloBtn.key ) {
+				isChannelsMuteMode = true;
+			}
+			else if ( action === nextTrack.key || action === prevTrack.key ) {
+				ccList.channel1[action].command();
+			}
 			// Check if CC is a mute / solo button:
-			if ( action >= mute1.key && action <= muteMaster.key ) {
+			else if ( action >= mute1.key && action <= muteMaster.key ) {
 				ccList.channel1[action].command();
 				return;
 			}
@@ -305,11 +304,18 @@ function onMidi(status, action, value)
 		}
 
 		// The following execute on button midi release (0)
-		if ( value === ccOff || value === transportOff ) 
+		if ( value === ccOff || value === buttonOff ) 
 		{
 
+			// Check if Shift is release:
+			if ( action === shift.key ) {
+				isShift = false;
+			} 
+			else if ( action === muteSoloBtn.key ) {
+				isChannelsMuteMode = false;
+			}
 			// Check if CC is a mute / solo button; Disable to keep button lighting logical:
-			if ( action >= mute1.key && action <= muteMaster.key ) {
+			else if ( action >= mute1.key && action <= muteMaster.key ) {
 				return;
 			}
 
@@ -333,23 +339,12 @@ function onMidi(status, action, value)
 function changeChannelState(channelSlot) {
 	var targetChannel = trackBank.getChannel(channelSlot);
 
-	switch(channels[channelSlot].state) {
-		case 0:
-			channels[channelSlot].state = 1;
-			targetChannel.getSolo().set(false);
-			targetChannel.getMute().set(true);
-			break;
-		case 1:
-			channels[channelSlot].state = 2;
-			targetChannel.getMute().set(false);
-			targetChannel.getSolo().set(true);
-			break;
-		case 2:
-			channels[channelSlot].state = 0;
-			targetChannel.getMute().set(false);
-			targetChannel.getSolo().set(false);
-			break;
+	if ( isChannelsMuteMode ) {
+		targetChannel.getMute().toggle();
+	} else {
+		targetChannel.getSolo().toggle();
 	}
+
 }
 
 /*
@@ -421,17 +416,13 @@ function knobCC(channel, value, resolution)
 
 	lastAffectedParam = parameters[channel].slot;
 
-	if ( 
-		parameters[channel].lastValue > value + knobsForgiveness || 
-		parameters[channel].lastValue < value - knobsForgiveness 
-	) {	return; } 
-
-	device.getParameter(channel).set(value, resolution);
+	if ( value > 63 ) {
+		value = isShift ? .1 : 1;
+	} else {
+		value = isShift ? -.1 : -1;
+	}
+	device.getParameter(channel).inc(value, resolution);
 	
-}
-
-function doFineTuning(value) {
-	device.getParameter(lastAffectedParam).incRaw(value);
 }
 
 /* 
