@@ -340,29 +340,6 @@ function onMidi(status, action, value)
 
 
 			}
-			
-			/*if ( action === shift.key ) {
-				isShift = true;
-				return;
-			} */
-			/*else if ( action === midiBtnFaders.key ) {
-				isMidiBtnFaders = true;
-				isMixerBtnFaders = false;
-				return;
-			}*/
-		/*	else if ( action === muteSoloBtn.key ) {
-				isChannelsMuteMode = true;
-				isMidiBtnFaders = false; // muteSoloBtn has the same CC as the 'mixer' button next to the faders
-				isMixerBtnFaders = true; 
-			}*/
-		/*	else if ( action === nextTrack.key || action === prevTrack.key ) {
-				ccList.channel1[action].command();
-			}*/
-			// Check if CC is a mute / solo button:
-		/*	else if ( action >= mute1.key && action <= muteMaster.key ) {
-				ccList.channel1[action].command();
-				return;
-			}*/
 
 			// Check if current CC combination means anything:
 			if ( status === firstChannel ) {
