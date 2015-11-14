@@ -308,29 +308,61 @@ function onMidi(status, action, value)
 		// The following executes on button midi press (127):
 		if ( value === ccOn || value === buttonOn ) 
 		{
-			// Check if Shift is pressed:
-			if ( action === shift.key ) {
+			switch(action) {
+				// Check if Shift is pressed:
+				case shift.key:
+					isShift = true;
+					break;
+				case midiBtnFaders.key:
+					isMidiBtnFaders = true;
+					isMixerBtnFaders = false;
+					break;
+				case muteSoloBtn.key:
+					isChannelsMuteMode = true;
+					isMidiBtnFaders = false; // muteSoloBtn has the same CC as the 'mixer' button next to the faders
+					isMixerBtnFaders = true;
+					break;
+				case nextTrack.key:
+				case prevTrack.key:
+					ccList.channel1[action].command();
+					break;
+				case mute1.key:
+				case mute2.key:
+				case mute3.key:
+				case mute4.key:
+				case mute5.key:
+				case mute6.key:
+				case mute7.key:
+				case mute8.key:
+				case muteMaster.key:
+					ccList.channel1[action].command();
+					break;
+
+
+			}
+			
+			/*if ( action === shift.key ) {
 				isShift = true;
 				return;
-			} 
-			else if ( action === midiBtnFaders.key ) {
+			} */
+			/*else if ( action === midiBtnFaders.key ) {
 				isMidiBtnFaders = true;
 				isMixerBtnFaders = false;
 				return;
-			}
-			else if ( action === muteSoloBtn.key ) { // muteSoloBtn has the same CC as the 'mixer' button next to the faders
+			}*/
+		/*	else if ( action === muteSoloBtn.key ) {
 				isChannelsMuteMode = true;
-				isMidiBtnFaders = false;
-				isMixerBtnFaders = true;
-			}
-			else if ( action === nextTrack.key || action === prevTrack.key ) {
+				isMidiBtnFaders = false; // muteSoloBtn has the same CC as the 'mixer' button next to the faders
+				isMixerBtnFaders = true; 
+			}*/
+		/*	else if ( action === nextTrack.key || action === prevTrack.key ) {
 				ccList.channel1[action].command();
-			}
+			}*/
 			// Check if CC is a mute / solo button:
-			else if ( action >= mute1.key && action <= muteMaster.key ) {
+		/*	else if ( action >= mute1.key && action <= muteMaster.key ) {
 				ccList.channel1[action].command();
 				return;
-			}
+			}*/
 
 			// Check if current CC combination means anything:
 			if ( status === firstChannel ) {
