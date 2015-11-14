@@ -85,17 +85,24 @@ CC.prototype.command = function()
 				case mute4M.key:
 					bitwig.createAudioTrack(cursorTrackPosition+1);
 					cursorTrack.selectNext();
+					// Select Previous Item 76
+					// Select Next Item 77
+					// Open contextual browser; API's .startBrowsing() won't work for tracks with empty device chains:
+					bitwigActions[431].invoke();
 					//bitwigActions[32].invoke();
 					break;
 				case mute5M.key:
 					if ( this.midiChan === firstChannel ) { // Allow if key is not shift2:
 						bitwig.createEffectTrack(cursorTrackPosition+1);
 						cursorTrack.selectNext();
+						bitwigActions[431].invoke(); // Open contextual browser;
 					}
 					break;
 				case mute6M.key:
 					bitwig.createInstrumentTrack(cursorTrackPosition+1);
 					cursorTrack.selectNext();
+					bitwigActions[431].invoke(); // Open contextual browser;
+
 					break;
 				case muteMasterM.key:
 					bitwig.setPanelLayout(nextPanelToDisplay);
@@ -105,6 +112,9 @@ CC.prototype.command = function()
 					break;
 				case prevTrack.key:
 					cursorTrack.selectPrevious();
+					break;
+				case ccStop.key:
+					device.getParameter(lastAffectedParam).reset();
 					break;
 			}
 		} 
@@ -121,8 +131,7 @@ CC.prototype.command = function()
 				case mute8M.key:
 					changeChannelState(channels[this.slot].slot);
 					break;
-			}
-			
+			}	
 		}
 	}
 

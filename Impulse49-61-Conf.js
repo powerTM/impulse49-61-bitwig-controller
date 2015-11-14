@@ -82,7 +82,7 @@ var midiBtnKnobs  	= new CC(8, "midiBtnKnobs", 177), // "MIDI" / "Page down" but
 	pluginBtn 		= new CC(10, "pluginBtn", 177), // "Plugin" / "Page Up" button next to knobs
 	pageUpBtn		= new CC(11, "pageUpBtn", 177), // The result of holding shift + "Plugin" button
 	pageDownBtn 	= new CC(12, "pageDownBtn", 177), // The result of holding shift + "MIDI" button
-	midiBtnFaders  	= new CC(33, "midiBtnFaders"), // "MIDI" / "Bank Down" button next to faders:
+	midiBtnFaders  	= new CC(33, "midiBtnFaders", 176), // "MIDI" / "Bank Down" button next to faders:
 	//Clashes with the mutu/solo button:
 	//mixerBtn 		= new CC(34, "mixerBtn", ), // "Mixer" / "Bank Up" button next to faders 
 	muteSoloBtn		= new CC(34, "mutuSoloBtn", 176), // Switches between mute / solo - when "Mixer" button is on

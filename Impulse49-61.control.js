@@ -36,8 +36,10 @@ var SYSEX_HEADER 	   		= "F0 00 20 29 67",
 	impulseDebugging 		= false,
 	panelSwap 				= 0,
 	cursorTrackPosition 	= 0,
-	lastAffectedParam 		= 0, // Used to tell Bitwig which parameter to reset when requested	
+	lastAffectedParam 		= 0, // Tells Bitwig which parameter to reset when requested	
 	isShift					= false,
+	isMidiBtnFaders			= false,
+	isMixerBtnFaders		= true,
 	isChannelsMuteMode		= true;
 
 load('Impulse49-61-Conf.js');
@@ -88,20 +90,49 @@ function init()
 	/* Bitwig application listener */
 	bitwig = host.createApplication();
 	/* Devices listener: */
-	device = host.createCursorDevice();
+	//device = host.createCursorDevice(); - Deprecated
+	device = host.createEditorCursorDevice();
+
+/*	device.addCanSelectPreviousObserver(function(can){
+		println("Can select prev:" + can);
+	});
+	device.addCanSelectNextObserver(function(can){
+		println("Can select next:" + can);
+	});*/
 
 	device.addSelectedPageObserver(0,function(page){
 		host.scheduleTask(notifyImpulse, ["Params " + page], 500);
 	});
-
+	/*> sessionBank.getSession(0).activate()
+	> sessionBank.getSession(0).startBrowsing()*/
 	deviceBrowser = device.createDeviceBrowser(1,1);
-	deviceBrowser.getDeviceSession().addIsActiveObserver(function(isBrowsing) {
-		println("Browsing: " + isBrowsing);
-	})
+	//sessionBank = deviceBrowser.createSessionBank(1); - Makes Bitwig crash when deviceBrowser.startBrowsing() is used
+	cursorBrowser = deviceBrowser.createCursorSession();
+/*	testy = deviceBrowser.getDeviceSession().getCategoryFilter().addNameObserver(50, "Cat NA", function(name){
+		println(name);
+	});*/
+	cursorBrowser.addIsActiveObserver(function(active){
+		println("Is cursor browser active: " + active);
+	});
+
+	cursorBrowser.addNameObserver(20, "Not avail", function(name){
+		println("Name of cursor browser: " + name);
+	});
+
+	deviceBrowser.getDeviceSession().addIsActiveObserver(function(isit){
+		println("Device Brwosing Session active: " + isit);
+	});
+	deviceBrowser.getDeviceSession().addIsAvailableObserver(function(isit){
+		println("Device browsing session is avail:" + isit);
+	});
+
+	deviceBrowser.addIsBrowsingObserver(function(isBrowsing){
+		println("Device browser is browsin: " + isBrowsing);
+	});
 	
 	device.addHasSelectedDeviceObserver(function(hasSelectedDevice){
-		println(hasSelectedDevice);
-	})
+		println("Has selected device: " + hasSelectedDevice);
+	});
 	/* Listen to device preset changes and report to Impulse */
 	device.addPresetNameObserver(20, "Bitwig", function(presetName){
 		host.scheduleTask(notifyImpulse, [presetName], 500);
@@ -150,7 +181,6 @@ function init()
 	//arranger = host.createArranger();
 	trackBank = host.createTrackBank(8,8,8);
 	cursorTrack = host.createArrangerCursorTrack(0,0);
-	cursorDevice = host.createEditorCursorDevice();
 
 	/* Follow position of cursor track in the channels list: */
 	cursorTrack.addPositionObserver(function(pos){
@@ -190,7 +220,7 @@ function init()
 	});
 
 	device.addPositionObserver(function(pos){
-		println(pos);
+		println("Position of device: " + pos);
 	})
 
 
@@ -267,9 +297,12 @@ function onMidi(status, action, value)
 
 		// Check if CC is a knob:
 		if ( action >= knob1P.key && action <= knob8P.key && !midiBtnKnobsOn ) {
-
-			knobCC(ccList.channel2[action].slot, value);
-
+			if ( status === secondChannel && !isMidiBtnFaders ) {
+				knobCC(ccList.channel2[action].slot, value);
+			} 
+			else if ( isMidiBtnFaders && status === secondChannel ) {
+				knobsNavigation(action, value);
+			}
 		}
 
 		// The following executes on button midi press (127):
@@ -279,9 +312,16 @@ function onMidi(status, action, value)
 			if ( action === shift.key ) {
 				isShift = true;
 				return;
+			} 
+			else if ( action === midiBtnFaders.key ) {
+				isMidiBtnFaders = true;
+				isMixerBtnFaders = false;
+				return;
 			}
-			else if ( action === muteSoloBtn.key ) {
+			else if ( action === muteSoloBtn.key ) { // muteSoloBtn has the same CC as the 'mixer' button next to the faders
 				isChannelsMuteMode = true;
+				isMidiBtnFaders = false;
+				isMixerBtnFaders = true;
 			}
 			else if ( action === nextTrack.key || action === prevTrack.key ) {
 				ccList.channel1[action].command();
@@ -338,7 +378,6 @@ function onMidi(status, action, value)
  */
 function changeChannelState(channelSlot) {
 	var targetChannel = trackBank.getChannel(channelSlot);
-
 	if ( isChannelsMuteMode ) {
 		targetChannel.getMute().toggle();
 	} else {
@@ -425,6 +464,27 @@ function knobCC(channel, value, resolution)
 	
 }
 
+function knobsNavigation(knob, value) 
+{
+	var direction;
+
+	if ( knob === knob1P.key || knob === knob1.key ) {
+		if ( value > 63 ) {
+			bitwig.arrowKeyDown();
+		} else {
+			bitwig.arrowKeyUp();
+		}
+	} 
+
+	if ( knob === knob5P.key || knob === knob5.key ) {
+		if ( value > 63 ) {
+			bitwig.arrowKeyRight();
+		} else {
+			bitwig.arrowKeyLeft();
+		}
+	} 
+
+}
 /* 
  * Block upcoming status 128 (button released status) CC  
  * to prevent other CC commands from executing:
