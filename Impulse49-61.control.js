@@ -319,8 +319,8 @@ function onMidi(status, action, value)
 					break;
 				case muteSoloBtn.key:
 					isChannelsMuteMode = true;
-					isMidiBtnFaders = false; // muteSoloBtn has the same CC as the 'mixer' button next to the faders
-					isMixerBtnFaders = true;
+					isMidiBtnFaders = false; // muteSoloBtn has the same CC as the 'mixer' button next to the faders.
+					isMixerBtnFaders = true; 
 					break;
 				case nextTrack.key:
 				case prevTrack.key:
@@ -337,8 +337,6 @@ function onMidi(status, action, value)
 				case muteMaster.key:
 					ccList.channel1[action].command();
 					break;
-
-
 			}
 
 			// Check if current CC combination means anything:
@@ -476,8 +474,8 @@ function knobCC(channel, value, resolution)
 function knobsNavigation(knob, value) 
 {
 	var direction;
-
-	if ( knob === knob1P.key || knob === knob1.key ) {
+	/* Arrow keys navigation: */
+	if ( knob === knob1P.key ) {
 		if ( value > 63 ) {
 			bitwig.arrowKeyDown();
 		} else {
@@ -485,11 +483,19 @@ function knobsNavigation(knob, value)
 		}
 	} 
 
-	if ( knob === knob5P.key || knob === knob5.key ) {
+	if ( knob === knob5P.key ) {
 		if ( value > 63 ) {
 			bitwig.arrowKeyRight();
 		} else {
 			bitwig.arrowKeyLeft();
+		}
+	}
+	/* Tabs navigation: */
+	if ( knob === knob6P.key ) {
+		if ( value > 63 ) {
+			bitwigActions[135].invoke(); // Move to next tab
+		} else {
+			bitwigActions[136].invoke(); // Move to prev tab
 		}
 	} 
 
@@ -498,7 +504,7 @@ function knobsNavigation(knob, value)
  * Block upcoming status 128 (button released status) CC  
  * to prevent other CC commands from executing:
 */
-function clearLastCC(disableNext) {
+function clearLastCC(disableNext, queue) {
 
 	if ( disableNext === true ) {
 
@@ -507,7 +513,7 @@ function clearLastCC(disableNext) {
 	 * ( every button release == action; a combination of two CC 
 	 * pressed at the same time == two release statuses being sent to bitwig ) 
 	 */
-		disableNextCc = 2;
+		disableNextCc = queue !== 'undefined' ? queue : 2;
 	}
 
 	currentCC = "";

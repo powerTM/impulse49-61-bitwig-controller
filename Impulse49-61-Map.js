@@ -8,17 +8,25 @@ CC.prototype.command = function()
 				transport.rewind();
 				break;
 			} else {
-				host.scheduleTask(notifyImpulse, ["RE/FF disabled. Switch back to 'Plugin' to enable."], 500);
+				host.scheduleTask(notifyImpulse, ["RE/FF disabled. Press 'Plugin' to re-enable."], 500);
 			}
 
 		case ccFastForward.key:
 			if ( !midiBtnKnobsOn ) {
 				transport.fastForward();
 				break;
+			} else {
+				host.scheduleTask(notifyImpulse, ["RE/FF disabled. Press 'Plugin' to re-enable."], 500);
 			}
 
 		case ccStop.key:
-			transport.stop();
+			if ( isShift ) {
+				device.getParameter(lastAffectedParam).reset();
+				clearLastCC(true);
+			} else {
+				transport.stop();
+			}
+			
 			break;
 		case ccPlay.key:
 			transport.play();
@@ -27,7 +35,12 @@ CC.prototype.command = function()
 			transport.toggleLoop();
 			break;
 		case ccRecord.key:
-			transport.record();
+			if ( isMidiBtnFaders ) {
+				bitwig.enter();
+			} else {
+				transport.record();
+			}
+			
 			break;
 		case midiBtnKnobs.key:
 			midiBtnKnobsOn = true;
@@ -113,25 +126,25 @@ CC.prototype.command = function()
 				case prevTrack.key:
 					cursorTrack.selectPrevious();
 					break;
-				case ccStop.key:
-					device.getParameter(lastAffectedParam).reset();
-					break;
 			}
 		} 
 
 		else {
-			switch(this.key) {
-				case mute1M.key:
-				case mute2M.key:
-				case mute3M.key:
-				case mute4M.key:
-				case mute5M.key:
-				case mute6M.key:
-				case mute7M.key:
-				case mute8M.key:
-					changeChannelState(channels[this.slot].slot);
-					break;
-			}	
+			if ( this.midiChan === firstChannel ) {
+				switch(this.key) {
+					case mute1M.key:
+					case mute2M.key:
+					case mute3M.key:
+					case mute4M.key:
+					case mute5M.key:
+					case mute6M.key:
+					case mute7M.key:
+					case mute8M.key:
+						changeChannelState(channels[this.slot].slot);
+						break;
+				}
+			}
+				
 		}
 	}
 
