@@ -133,6 +133,7 @@ function init()
 	device.addHasSelectedDeviceObserver(function(hasSelectedDevice){
 		println("Has selected device: " + hasSelectedDevice);
 	});
+
 	/* Listen to device preset changes and report to Impulse */
 	device.addPresetNameObserver(20, "Bitwig", function(presetName){
 		host.scheduleTask(notifyImpulse, [presetName], 500);
@@ -223,6 +224,25 @@ function init()
 		println("Position of device: " + pos);
 	})
 
+	// Bitwig hacking:
+/*	for ( var prop in bitwigActions[431] ) {
+		println("Prop name:" + prop);
+		if ( prop === "instance" || prop === "class" || prop === "observers" ) {
+			println("///SKIPPED prop name '" + prop + "'///");
+			continue;
+		}
+		println(bitwigActions[431][prop]);
+	}
+
+	for ( var prop in com.bitwig.base.control_surface.iface.Browser ) {
+		println("Prop name:" + prop);
+		if ( prop === "children" || prop === "observers" || prop === "instance" || prop === "position" || prop === "class") {
+			println("///SKIPPED prop name '" + prop + "'///");
+			continue;
+		}
+		println(com.bitwig.base.control_surface.iface.Browser[prop]);
+		println("");
+	}*/
 
 
 	// Not using next/previousPanelLayout() because it won't switch to "EDIT":
@@ -308,6 +328,7 @@ function onMidi(status, action, value)
 		// The following executes on button midi press (127):
 		if ( value === ccOn || value === buttonOn ) 
 		{
+
 			switch(action) {
 				// Check if Shift is pressed:
 				case shift.key:
@@ -325,6 +346,18 @@ function onMidi(status, action, value)
 				case nextTrack.key:
 				case prevTrack.key:
 					ccList.channel1[action].command();
+					break;
+				case pageUpBtn.key:
+					if ( status === secondChannel ) {
+						device.previousParameterPage();
+					}
+					
+					break;
+				case pageDownBtn.key:
+					if ( status === secondChannel ) {
+						device.nextParameterPage();
+					}
+					
 					break;
 				case mute1.key:
 				case mute2.key:

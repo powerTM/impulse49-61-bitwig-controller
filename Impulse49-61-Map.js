@@ -92,17 +92,23 @@ CC.prototype.command = function()
 					}
 					
 					break;
-				case mute3M.key:
-					bitwig.toggleBrowserVisibility();
+				case mute3M.key: // Has same CC as pageUpBtn.key
+					if ( this.midiChan === firstChannel ) {
+						bitwig.toggleBrowserVisibility();
+					}
+					
 					break;
-				case mute4M.key:
-					bitwig.createAudioTrack(cursorTrackPosition+1);
-					cursorTrack.selectNext();
-					// Select Previous Item 76
-					// Select Next Item 77
-					// Open contextual browser; API's .startBrowsing() won't work for tracks with empty device chains:
-					bitwigActions[431].invoke();
-					//bitwigActions[32].invoke();
+				case mute4M.key: // Has same CC as pageDownBtn.key
+					if ( this.midiChan === firstChannel ) {
+						bitwig.createAudioTrack(cursorTrackPosition+1);
+						cursorTrack.selectNext();
+						// Select Previous Item 76
+						// Select Next Item 77
+						// Open contextual browser; API's .startBrowsing() won't work for tracks with empty device chains:
+						bitwigActions[431].invoke();
+						//bitwigActions[32].invoke();
+					}
+					
 					break;
 				case mute5M.key:
 					if ( this.midiChan === firstChannel ) { // Allow if key is not shift2:
@@ -155,18 +161,8 @@ CC.prototype.command = function()
 	// Device control mode commands:
 	else if ( impulseControlMode === "device" ) {
 		switch(this.key) {
-			case muteMaster.key:
-				device.getParameter(lastAffectedParam).reset();
-				break;
 			case mute6.key:
-				device.previousParameterPage();
 				break;
-			case mute7.key:
-				device.nextParameterPage();
-				break;
-			case mute8.key:
-				break;
-
 		}
 	}
 	
