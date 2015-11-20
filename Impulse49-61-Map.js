@@ -92,9 +92,9 @@ CC.prototype.command = function()
 					}
 					
 					break;
-				case mute3M.key: // Has same CC as pageUpBtn.key
+				case mute3M.key: // Has same CC as pageUpBtn.key, so we check the channel:
 					if ( this.midiChan === firstChannel ) {
-						bitwig.toggleBrowserVisibility();
+						openBrowser();
 					}
 					
 					break;
@@ -104,8 +104,7 @@ CC.prototype.command = function()
 						cursorTrack.selectNext();
 						// Select Previous Item 76
 						// Select Next Item 77
-						// Open contextual browser; API's .startBrowsing() won't work for tracks with empty device chains:
-						bitwigActions[431].invoke();
+						openBrowser();
 						//bitwigActions[32].invoke();
 					}
 					
@@ -114,14 +113,13 @@ CC.prototype.command = function()
 					if ( this.midiChan === firstChannel ) { // Allow if key is not shift2:
 						bitwig.createEffectTrack(cursorTrackPosition+1);
 						cursorTrack.selectNext();
-						bitwigActions[431].invoke(); // Open contextual browser;
+						openBrowser();
 					}
 					break;
 				case mute6M.key:
 					bitwig.createInstrumentTrack(cursorTrackPosition+1);
 					cursorTrack.selectNext();
-					bitwigActions[431].invoke(); // Open contextual browser;
-
+					openBrowser();
 					break;
 				case muteMasterM.key:
 					bitwig.setPanelLayout(nextPanelToDisplay);
@@ -174,6 +172,7 @@ CC.prototype.comboCmd = function()
 	switch(currentCC + this.name) {
 		case ccFastForward.name + ccRewind.name:
 			device.switchToPreviousPreset();
+			clearLastCC(true);
 			break;
 		case ccRecord.name + ccRewind.name:
 			bitwig.undo();

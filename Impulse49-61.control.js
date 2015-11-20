@@ -33,6 +33,7 @@ var SYSEX_HEADER 	   		= "F0 00 20 29 67",
 	nextPanelToDisplay 		= "MIX",
 	mixerFadersForgiveness 	= 3.0,
 	knobsForgiveness		= 10.0,
+	defaultBrowser 			= "Contextual",
 	impulseDebugging 		= false,
 	panelSwap 				= 0,
 	cursorTrackPosition 	= 0,
@@ -153,15 +154,19 @@ function init()
 	 * will be to mixer faders trying to re-adjust an existing volume value in a given channel.
 	 */
 	preferencesFaderForgiveness = preferences
-	.getNumberSetting("Channel Volume:", "Mixer Faders Forgiveness", 1.0, 128.0, 1.0, "CC", 3.0)
+	.getNumberSetting("Faders (volume):", "Override Precision", 1.0, 128.0, 1.0, "CC", 3.0)
 	.addRawValueObserver(function(forgiveness){ mixerFadersForgiveness = forgiveness; });
 
 	preferencesKnobForgiveness = preferences
-	.getNumberSetting("Device Parameters:", "Knobs Forgiveness", 1.0, 128.0, 1.0, "CC", 10.0)
+	.getNumberSetting("Knobs (device parameters):", "Override Precision", 1.0, 128.0, 1.0, "CC", 10.0)
 	.addRawValueObserver(function(forgiveness){ knobsForgiveness = forgiveness ;});
+	/* Let users select the default broswer browser they want to browse when creating tracks: */
+	preferencesDefaultBrowser = preferences
+	.getEnumSetting("Type:", "Browser", ["Contextual", "Simple"], "Contextual")
+	.addValueObserver(function(val){ defaultBrowser = val ;});
 
 
-	preferencesDebuging = preferences.getEnumSetting("Enable Debugging?", "Debugging", ["Yes", "No"], "No")
+	preferencesDebuging = preferences.getEnumSetting("Enable debugging?:", "Debugging", ["Yes", "No"], "No")
 	.addValueObserver(function(val){
 		impulseDebugging = val === "Yes" ;
 		if ( impulseDebugging ) { println("Debugging..."); }
@@ -179,7 +184,7 @@ function init()
 	/* Mixer listener: */
 	mixer = host.createMixer();
 	deviceVisible = mixer.isDeviceSectionVisible();
-	//arranger = host.createArranger();
+	arranger = host.createArranger();
 	trackBank = host.createTrackBank(8,8,8);
 	cursorTrack = host.createArrangerCursorTrack(0,0);
 
@@ -233,16 +238,16 @@ function init()
 		}
 		println(bitwigActions[431][prop]);
 	}
-
-	for ( var prop in com.bitwig.base.control_surface.iface.Browser ) {
+*/
+	for ( var prop in cursorTrack ) {
 		println("Prop name:" + prop);
 		if ( prop === "children" || prop === "observers" || prop === "instance" || prop === "position" || prop === "class") {
 			println("///SKIPPED prop name '" + prop + "'///");
 			continue;
 		}
-		println(com.bitwig.base.control_surface.iface.Browser[prop]);
+		println(cursorTrack[prop]);
 		println("");
-	}*/
+	}
 
 
 	// Not using next/previousPanelLayout() because it won't switch to "EDIT":
@@ -309,7 +314,7 @@ function onMidi(status, action, value)
 
 		// Check if CC is a mixer fader:
 		if ( action >= fader1M.key && action <= fader8M.key ) {
-			if ( status !== secondChannel ) {
+			if ( status === firstChannel ) {
 				setVolume(ccList.channel1[action].slot, value);
 			}
 			
@@ -467,11 +472,24 @@ function lightShow(pad) {
 	sendMidi(noteReleased, pad, ccOff);
 }
 
+function openBrowser() {
+	// Open contextual browser; 
+	// API's .startBrowsing() won't work for tracks with empty device chains,
+	// So we're openning the browser from the Bitwig Actions class:
+	if ( defaultBrowser === "Contextual" ) {
+		bitwigActions[431].invoke();
+	// Open simple browser:
+	} else {
+		//196, 184
+		bitwigActions[196].invoke();
+		bitwigActions[423].invoke();
+	}
+}
+
 /* Set channel volume according to mixer fader CC: */
 function setVolume(channel, value, resolution) 
 {
 	resolution = resolution == null ? 128 : resolution;
-
 	/* 	
 	 * The following lines provide protection from overwriting existing fader volumes.
 	 * A margin of 2 midi CC is set instead of 1, which is too restricting -
@@ -537,16 +555,15 @@ function knobsNavigation(knob, value)
  * Block upcoming status 128 (button released status) CC  
  * to prevent other CC commands from executing:
 */
-function clearLastCC(disableNext, queue) {
+function clearLastCC(disableNext) {
 
 	if ( disableNext === true ) {
-
 	/* 
 	 * disableNextCc = 2 because there are two upcoming CC to cancel
 	 * ( every button release == action; a combination of two CC 
 	 * pressed at the same time == two release statuses being sent to bitwig ) 
 	 */
-		disableNextCc = queue !== 'undefined' ? queue : 2;
+		disableNextCc = 2;
 	}
 
 	currentCC = "";
