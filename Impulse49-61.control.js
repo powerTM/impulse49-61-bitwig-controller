@@ -1,7 +1,7 @@
 /*
 *
 * novation IMPULSE49/61 controller script for Bitwig.
-* Note: remember to change your IMPULSE's template to "blank", otherwise the script will not run correctly.
+* Note: remember to change your IMPULSE's template to "blank" - otherwise the script will not run correctly.
 */
 
 /* pre-init() configurations: */
@@ -194,32 +194,13 @@ function init()
 	})
 	/* 
 	 * Channels volume listeners 
-	 * ( not using a loop to assign them because for some reason loops won't assign anything ) 
+	 * 
 	*/
-	trackBank.getChannel(0).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[0].volume = currentVolume;
-	});
-	trackBank.getChannel(1).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[1].volume = currentVolume;
-	});
-	trackBank.getChannel(2).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[2].volume = currentVolume;
-	});
-	trackBank.getChannel(3).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[3].volume = currentVolume;
-	});
-	trackBank.getChannel(4).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[4].volume = currentVolume;
-	});
-	trackBank.getChannel(5).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[5].volume = currentVolume;
-	});
-	trackBank.getChannel(6).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[6].volume = currentVolume;
-	});
-	trackBank.getChannel(7).getVolume().addValueObserver(128, function(currentVolume) {
-		channels[7].volume = currentVolume;
-	});
+	initVolObserverCreator(); // Activate the channel volume observer creator
+
+	for ( var i = 0 ; i < 8 ; i++ ) {
+		setChannelVolObserver(i);	
+	}
 
 	device.getParameter(0).addValueObserver(128, function(val){
 		parameters[0].lastValue = val;
@@ -238,7 +219,7 @@ function init()
 		}
 		println(bitwigActions[431][prop]);
 	}
-*/
+
 	for ( var prop in cursorTrack ) {
 		println("Prop name:" + prop);
 		if ( prop === "children" || prop === "observers" || prop === "instance" || prop === "position" || prop === "class") {
@@ -247,7 +228,7 @@ function init()
 		}
 		println(cursorTrack[prop]);
 		println("");
-	}
+	}*/
 
 
 	// Not using next/previousPanelLayout() because it won't switch to "EDIT":
@@ -255,13 +236,6 @@ function init()
 		nextPanelToDisplay = panel === "MIX" ? "EDIT" : panel === "EDIT" ? "ARRANGE" : "MIX";
 
 	}, 8);
-
-	// TEST:
-/*	for ( var i = 0 ; i < 8 ; i++ ) {
-		trackBank.getChannel(i).getVolume().addValueObserver(128, makeIndex(i, function(currentVolume) {
-			channels[i].volume = currentVolume;
-		}));
-	}*/
 
 	/* Say hi when controller script is loaded: */
 	var ms = 50;
@@ -271,6 +245,15 @@ function init()
 		ms += 50;
 	}
 
+}
+
+function initVolObserverCreator() {
+	setChannelVolObserver = function(channel) {
+		trackBank.getChannel(channel).getVolume().addValueObserver(128, function(currentVolume) {
+			channels[channel].volume = currentVolume;
+			//println(i);
+		});
+	}
 }
 
 function makeIndex(index, f)
