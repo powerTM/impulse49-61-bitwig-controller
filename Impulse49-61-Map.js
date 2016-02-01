@@ -1,4 +1,5 @@
 // CC Command mappings:
+// Yoni's changes
 CC.prototype.command = function() 
 {
 	// Mode-free commands:
