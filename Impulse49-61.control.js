@@ -7,23 +7,22 @@
 /* pre-init() configurations: */
 loadAPI(1);
 host.defineController("Novation", "Impulse49/61", "1.0", "ED699150-756A-11E5-A837-0800200C9A66", "Nuriel Pele");
-host.defineMidiPorts(1, 1);
+host.defineMidiPorts(2, 1);
 
-/*
- * 
- * Automatic device discovery:
- *
- */
 
-host.addDeviceNameBasedDiscoveryPair(["Impulse", "MIDIIN2 (Impulse)"], ["Impulse"]);
-
-for ( var i = 1; i < 9; i++ ) 
+if (host.platformIsWindows())
 {
-	var name = i.toString() + "- Impulse";
-	host.addDeviceNameBasedDiscoveryPair( [name], [name] );
-	host.addDeviceNameBasedDiscoveryPair( ["Impulse MIDI " + i.toString()], ["Impulse MIDI " + i.toString()] );
+	host.addDeviceNameBasedDiscoveryPair(["Impulse", "MIDIIN2 (Impulse)"], ["Impulse"]);
+	host.addDeviceNameBasedDiscoveryPair(["Novation Impulse", "MIDIIN2 (Novation Impulse)"], ["Novation Impulse"]);
 }
-
+else if (host.platformIsMac())
+{
+   	host.addDeviceNameBasedDiscoveryPair(["Impulse Impulse", "Impulse Impulse MIDI In"], ["Impulse Impulse"]);
+}
+else if (host.platformIsLinux())
+{
+	host.addDeviceNameBasedDiscoveryPair(["Impulse MIDI 1", "Impulse MIDI 2"], ["Impulse MIDI 1"]);
+}
 
 var SYSEX_HEADER 	   		= "F0 00 20 29 67",
 	ccList 		   	   		= {channel1: [], channel2: []}, // CC index
@@ -59,9 +58,9 @@ var	notePressed    = 144,
 	firstChannel   = 176,
 	secondChannel  = 177;
 
-
 function init()
 {
+
 	println("experimental");
 	bitwigVersion = host.getHostVersion();
 	/* CC midi actions listener: */
@@ -80,7 +79,8 @@ function init()
 		"80????", // Note keys releases 
 		"90????", // Note keys presses
 		"B?01??", 
-		"B040??", 
+		"B040??",
+		"B240??", 
 		"D0????", // Pressure on
 		"E000??", // Pitch wheel
 		"E07F7F"  // Pitch wheel 127
@@ -270,9 +270,10 @@ function makeIndex(index, f)
  * @param action int - requested midi action
  * @param value int  - value of midi action
  */
+
 function onMidi(status, action, value)
 {
-
+printMidi(status, action, value);
 	if ( impulseDebugging ) {
 		printMidi(status, action, value);
 	}
@@ -290,10 +291,8 @@ function onMidi(status, action, value)
 		clearLastCC();
 		return;
 	}
-
-	// Check if current midi is legit:
-	if ( isChannelController(status) ) {
-
+// Check if current midi is legit:
+	if ( isChannelController(status)) {
 
 		// Check if CC is a mixer fader:
 		if ( action >= fader1M.key && action <= fader8M.key ) {
@@ -314,7 +313,7 @@ function onMidi(status, action, value)
 		}
 
 		// The following executes on button midi press (127):
-		if ( value === ccOn || value === buttonOn ) 
+		if ( (value === ccOn || value === buttonOn)  && status!=178) 
 		{
 
 			switch(action) {
@@ -363,8 +362,10 @@ function onMidi(status, action, value)
 			// Check if current CC combination means anything:
 			if ( status === firstChannel ) {
 				ccList.channel1[action].comboCmd(currentCC);
+				println(ccList.channel1[action].name);
 			} else {
 				ccList.channel2[action].comboCmd(currentCC);
+				println(ccList.channel1[action].name);
 			}
 			
 			currentCC = ccList.channel1[action].name;
@@ -372,7 +373,7 @@ function onMidi(status, action, value)
 		}
 
 		// The following execute on button midi release (0)
-		if ( value === ccOff || value === buttonOff ) 
+		if ( (value === ccOff || value === buttonOff) && status!=178 ) 
 		{
 
 			// Check if Shift is release:
@@ -561,4 +562,3 @@ function onSysex(data)
 }
 
 function exit(){}
-
